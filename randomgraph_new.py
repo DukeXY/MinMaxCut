@@ -1,4 +1,3 @@
-from randomgraph import create_LP
 import random
 import numpy as np
 from scipy.optimize import linprog
@@ -58,7 +57,7 @@ def findOptimum(n, g):
         if (maxx < minx):
             #print maxx
             minx = maxx
-    print minx
+    print minx,
 
 def create_LP(n, g):
     cnt = 0
@@ -131,12 +130,14 @@ def create_LP(n, g):
     #print a
     #print b
     #print c
-    res = linprog(c, A_ub=a, b_ub=b, options={"disp": True, "maxiter": 10000})
-    print res
+    res = linprog(c, A_ub=a, b_ub=b, options={"disp": False, "maxiter": 10000})
+    print res["fun"]
 
 if  __name__=="__main__":
-    n = input("Enter Number of vertices")
-    degree = input("Enter Degrees")
-    createConstantDegreeGraph(n, degree)
+    n = input("Enter Number of vertices: ")
+    degree = input("Enter Degrees: ")
+    iter = input("Enter Iterations: ")
+    for i in range(iter):
+        createConstantDegreeGraph(n, degree)
 
 
