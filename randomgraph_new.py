@@ -7,15 +7,23 @@ def createConstantDegreeGraph(n, degree):
 
     for i in range(0, n):
         cnt = 0
-        for j in range(0, n):
-            cnt += g[i][j]
         v = set()
+        v.add(i)
+        for j in range(0, n):
+            if (i==j):
+                continue
+            cnt += g[i][j]
+            if (g[i][j]==1):
+                v.add(j)
         while (cnt < degree):
-            r = int(random.uniform(0, n-1))
+            r = int(random.uniform(0, n))
             if (not r in v):
                 v.add(r)
                 cnt += 1
                 g[i][r] = 1
+                g[r][i] = 1
+            #print g
+    #print g
     findOptimum(n, g)
     create_LP(n, g)
 
@@ -65,13 +73,17 @@ def create_LP(n, g):
     b = []
     for u in range(0, n):
         for v in range(u+1, n):
-            for w in range(0, n):
-                if (u == v or v == w or u == w):
-                    continue
+            for w in range(v+1, n):
                 line = []
-                for cnt in range(0, n*n):
-                    uu = cnt / n
-                    vv = cnt % n
+                modul = n
+                uu = 0
+                vv = 0
+                for cnt in range(0, n*(n-1)/2):
+                    vv += 1
+                    if (vv >= modul):
+                        uu += 1
+                        vv = uu + 1
+                    #print uu, vv
                     if (uu == u and vv == v):
                         line.append(-1)
                         continue
@@ -87,22 +99,14 @@ def create_LP(n, g):
                 b.append(0)
 
     line = []
-    for cnt in range(0, n*n):
-        uu = cnt / n
-        vv = cnt % n
-        if (uu == 0 and vv == n/2):
-            line.append(-1)
-            continue
-        line.append(0)
-    line.append(0)
-    a.append(line)
-    b.append(-1)
-
-    line = []
-    for cnt in range(0, n*n):
-        uu = cnt / n
-        vv = cnt % n
-        if (uu == n/2 and vv == 0):
+    uu = 0
+    vv = 0
+    for cnt in range(0, n*(n-1) /2):
+        vv += 1
+        if (vv >= modul):
+            uu += 1
+            vv = uu + 1
+        if (uu == 0 and vv == n-1):
             line.append(-1)
             continue
         line.append(0)
@@ -112,24 +116,28 @@ def create_LP(n, g):
 
     for v in range(0, n):
         line = []
-        for cnt in range(0, n*n):
-            uu = cnt / n
-            vv = cnt % n
-            if (vv == v and g[uu][vv] == 1):
+        uu = 0
+        vv = 0
+        for cnt in range(0, n*(n-1)/2):
+            vv += 1
+            if (vv >= modul):
+                uu += 1
+                vv = uu + 1
+            if ((vv == v or uu == v)  and g[uu][vv] == 1):
                 line.append(1)
                 continue
             line.append(0)
         line.append(-1)
         a.append(line)
         b.append(0)
-
+    #print a
     c = []
-    for cnt in range(0, n*n):
+    for cnt in range(0, n*(n-1)/2):
         c.append(0)
     c.append(1)
-    #print a
-    #print b
-    #print c
+    #print a.__sizeof__()
+    #print b.__sizeof__()
+    #print c.__sizeof__()
     res = linprog(c, A_ub=a, b_ub=b, options={"disp": False, "maxiter": 10000})
     print res["fun"]
 
