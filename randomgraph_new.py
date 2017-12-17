@@ -2,6 +2,8 @@ import random
 import numpy as np
 from scipy.optimize import linprog
 
+global filename
+
 def createConstantDegreeGraph(n, degree):
     g = np.zeros((n, n))
 
@@ -26,7 +28,15 @@ def createConstantDegreeGraph(n, degree):
     #print g
     a = findOptimum(n, g)
     b = create_LP(n, g)
-    print float(b)/a
+    if a == 0:
+        return
+    with open(filename, 'a') as f:
+        f.write(str(a) + " " + str(b) + " " + str(float(a)/b)+ "\n")
+    f.close()
+    print float(a)/b
+    if (b == 0):
+        return -1
+    return float(a)/b
 
 def findOptimum(n, g):
     b = np.zeros((n,))
@@ -142,10 +152,32 @@ def create_LP(n, g):
     return res["fun"]
 
 if  __name__=="__main__":
-    n = input("Enter Number of vertices: ")
-    degree = input("Enter Degrees: ")
-    iter = input("Enter Iterations: ")
-    for i in range(iter):
-        createConstantDegreeGraph(n, degree)
+    iter = 100
+    for n in range(10,16):
+        filename = "workfile"+str(n)
+        for degree in range(4, n-3):
+            mean = 0
+            min = n
+            max = 0
+            res=[]
+            for i in range(iter):
+                ans = createConstantDegreeGraph(n, degree)
+                if (ans == -1):
+                    continue
+                res.append(ans)
+                mean += ans
+                if (ans < min):
+                    min = ans
+                if (ans > max):
+                    max = ans
+            with open(filename, "a") as f:
+                f.write("For n and d "+ str(n) + " " + str(degree) + "\n")
+                f.write("Mean: "+ str(mean/iter) + "\n")
+                f.write("Min: "+ str(min) + "\n")
+                f.write("Max: "+ str(max) + "\n")
+                variance = np.var(np.array(res))
+                f.write("Variance: " + str(variance) + "\n")
+            f.close()
+
 
 
