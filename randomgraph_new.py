@@ -24,8 +24,9 @@ def createConstantDegreeGraph(n, degree):
                 g[r][i] = 1
             #print g
     #print g
-    findOptimum(n, g)
-    create_LP(n, g)
+    a = findOptimum(n, g)
+    b = create_LP(n, g)
+    print float(b)/a
 
 def findOptimum(n, g):
     b = np.zeros((n,))
@@ -66,6 +67,7 @@ def findOptimum(n, g):
             #print maxx
             minx = maxx
     print minx,
+    return minx
 
 def create_LP(n, g):
     cnt = 0
@@ -135,11 +137,9 @@ def create_LP(n, g):
     for cnt in range(0, n*(n-1)/2):
         c.append(0)
     c.append(1)
-    #print a.__sizeof__()
-    #print b.__sizeof__()
-    #print c.__sizeof__()
     res = linprog(c, A_ub=a, b_ub=b, options={"disp": False, "maxiter": 10000})
-    print res["fun"]
+    print res["fun"],
+    return res["fun"]
 
 if  __name__=="__main__":
     n = input("Enter Number of vertices: ")
