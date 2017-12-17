@@ -1,6 +1,8 @@
 import random
 import numpy as np
 from scipy.optimize import linprog
+from cvxpy import *
+import time
 
 global filename
 
@@ -48,9 +50,23 @@ def create_graph(n, prob):
                 g[i][j] = 1
                 g[j][i] = 1
     a = findOptimum(n, g)
+
+    start = time.time()
     b = create_LP(n, g)
+    end = time.time()
+    timenew = end - start
+    #print "New " + str(end - start)
+
+    #start = time.time()
+    #c = create_LP2(n, g)
+    #end = time.time()
+    timeold = end - start
+    #print "Old " + str(end - start)
     if (b == 0):
         return -1
+    #if (c == 0):
+    #    return -1
+    #print a, b, c
     with open(filename, 'a') as f:
         f.write(str(a) + " " + str(b) + " " + str(float(a)/b)+ "\n")
     f.close()
@@ -100,6 +116,42 @@ def findOptimum(n, g):
     return minx
 
 def create_LP(n, g):
+    x = Variable(n*(n-1)/2+1)
+    constraints = []
+
+    for u in range(0, n):
+        for v in range(u+1, n):
+            for w in range(v+1, n):
+                aa = transfer(u ,v)
+                bb = transfer(v, w)
+                cc = transfer(u, w)
+
+                constraints.append(x[aa] + x[bb] >= x[cc])
+                constraints.append(x[aa] + x[cc] >= x[bb])
+                constraints.append(x[bb] + x[cc] >= x[aa])
+    constraints.append(x[transfer(0, n-1)] >= 1)
+    for v in range(0, n):
+        indices = []
+        for u in range(0, n):
+            if (u == v):
+                continue
+            if g[u][v]==1:
+                if (u < v):
+                    indices.append(transfer(u, v))
+                else:
+                    indices.append(transfer(v, u))
+
+        constraints.append(sum([x[i] for i in indices]) <= x[n*(n-1)/2])
+    constraints.append(x >= 0)
+
+    obj = Minimize(x[n*(n-1)/2])
+
+    prob = Problem(obj, constraints)
+    prob.solve()  # Returns the optimal value.
+    return prob.value
+
+
+def create_LP2(n, g):
     cnt = 0
     a = []
     b = []
@@ -192,16 +244,26 @@ def create_LP(n, g):
         return 0
     return res["fun"]
 
+def transfer(u,v):
+    s = 0
+    for i in range(n - u, n):
+        s = s + i
+    aa = s + v - u - 1
+    return aa
+
 if  __name__=="__main__":
+    global n, filename
+    filename = "test"
+    n = 10
     iter = 100
-    prob = [1.0/2.0, 2.0/3.0, 3.0/4.0, 4.0/5.0]
-    for n in range(11,16):
-        filename = "workfile"+str(n)
+    prob = [1.0 / 2.0, 2.0 / 3.0, 3.0 / 4.0, 4.0 / 5.0]
+    for n in range(11, 22):
+        filename = "workfile" + str(n)
         for p in prob:
             mean = 0
             min = n
             max = 0
-            res=[]
+            res = []
             for i in range(iter):
                 ans = create_graph(n, p)
                 if (ans == -1):
@@ -213,14 +275,12 @@ if  __name__=="__main__":
                 if (ans > max):
                     max = ans
             with open(filename, "a") as f:
-                f.write("For n and d "+ str(n) + " " + str(p) + "\n")
-                f.write("Mean: "+ str(mean/iter) + "\n")
-                f.write("Min: "+ str(min) + "\n")
-                f.write("Max: "+ str(max) + "\n")
+                f.write("For n and d " + str(n) + " " + str(p) + "\n")
+                f.write("Mean: " + str(mean / iter) + "\n")
+                f.write("Min: " + str(min) + "\n")
+                f.write("Max: " + str(max) + "\n")
                 variance = np.var(np.array(res))
                 f.write("Variance: " + str(variance) + "\n")
             f.close()
-            print "Finish Case with " + str(n) +" "+ str(p) +"\n"
-
-
+            print "Finish Case with " + str(n) + " " + str(p) + "\n"
 
