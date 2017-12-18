@@ -11,8 +11,9 @@ def process(n, p):
             for i in range(100):
                 line = f.readline();
                 data = line.split(" ");
-                x.append(data[2])
+                x.append(float(data[2]))
         num_bins = 8
+        print x
         n, bins, patches = plt.hist(x, num_bins, facecolor='blue', alpha=0.5)
         plt.show()
 
